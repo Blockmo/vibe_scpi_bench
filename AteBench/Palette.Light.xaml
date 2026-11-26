@@ -1,0 +1,74 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- 淺色主題: 鍵與 Palette.Dark.xaml 一一對應；語意色加深以維持白底上的對比。 -->
+
+    <!-- 底色與文字 -->
+    <SolidColorBrush x:Key="BgBrush" Color="#FFEEF2F7"/>
+    <SolidColorBrush x:Key="PanelBrush" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="PanelAltBrush" Color="#FFF7F9FC"/>
+    <SolidColorBrush x:Key="LineBrush" Color="#FFE2E8F0"/>
+    <SolidColorBrush x:Key="LineHotBrush" Color="#FFCBD5E1"/>
+    <SolidColorBrush x:Key="InkBrush" Color="#FF0F172A"/>
+    <SolidColorBrush x:Key="MutedBrush" Color="#FF5B6B82"/>
+    <SolidColorBrush x:Key="FaintBrush" Color="#FF94A3B8"/>
+
+    <!-- 語意色 -->
+    <SolidColorBrush x:Key="CyanBrush" Color="#FF0284C7"/>
+    <SolidColorBrush x:Key="VioletBrush" Color="#FF7C3AED"/>
+    <SolidColorBrush x:Key="CoralBrush" Color="#FFE11D48"/>
+    <SolidColorBrush x:Key="GreenBrush" Color="#FF059669"/>
+    <SolidColorBrush x:Key="AmberBrush" Color="#FFB45309"/>
+    <SolidColorBrush x:Key="PinkBrush" Color="#FFDB2777"/>
+    <SolidColorBrush x:Key="SlateBrush" Color="#FF64748B"/>
+
+    <LinearGradientBrush x:Key="AccentGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FF06B6D4" Offset="0"/>
+        <GradientStop Color="#FF6366F1" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="StopGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFFB7185" Offset="0"/>
+        <GradientStop Color="#FFE11D48" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="OnAccentBrush" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="OnStopBrush" Color="#FFFFFFFF"/>
+
+    <!-- 背景光暈 -->
+    <RadialGradientBrush x:Key="BgGlow1Brush" Center="0.12,0.0" GradientOrigin="0.12,0.0" RadiusX="0.75" RadiusY="0.9">
+        <GradientStop Color="#2A22D3EE" Offset="0"/>
+        <GradientStop Color="#0022D3EE" Offset="1"/>
+    </RadialGradientBrush>
+    <RadialGradientBrush x:Key="BgGlow2Brush" Center="1.0,1.0" GradientOrigin="1.0,1.0" RadiusX="0.7" RadiusY="0.8">
+        <GradientStop Color="#226366F1" Offset="0"/>
+        <GradientStop Color="#006366F1" Offset="1"/>
+    </RadialGradientBrush>
+
+    <!-- 互動狀態 -->
+    <SolidColorBrush x:Key="HoverBrush" Color="#0A0F172A"/>
+    <SolidColorBrush x:Key="HoverStrongBrush" Color="#140F172A"/>
+    <SolidColorBrush x:Key="PressBrush" Color="#260284C7"/>
+    <SolidColorBrush x:Key="RowHoverBrush" Color="#0C0F172A"/>
+    <SolidColorBrush x:Key="CaptionHoverBrush" Color="#140F172A"/>
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#330F172A"/>
+    <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#660F172A"/>
+    <SolidColorBrush x:Key="SegmentBgBrush" Color="#FFE2E8F0"/>
+    <SolidColorBrush x:Key="SegmentOnBrush" Color="#FFFFFFFF"/>
+
+    <!-- 元件 -->
+    <SolidColorBrush x:Key="ChipBrush" Color="#FFEEF2F7"/>
+    <SolidColorBrush x:Key="ChipTextBrush" Color="#FF334155"/>
+    <SolidColorBrush x:Key="StreamTextBrush" Color="#FF1E293B"/>
+    <SolidColorBrush x:Key="StreamReadTextBrush" Color="#FF6D28D9"/>
+    <SolidColorBrush x:Key="ErrBadgeBrush" Color="#1FE11D48"/>
+    <SolidColorBrush x:Key="CardActiveBorderBrush" Color="#88059669"/>
+    <SolidColorBrush x:Key="BannerOkBrush" Color="#1A059669"/>
+    <SolidColorBrush x:Key="BannerOkBorderBrush" Color="#66059669"/>
+    <SolidColorBrush x:Key="BannerErrBrush" Color="#1AE11D48"/>
+    <SolidColorBrush x:Key="BannerErrBorderBrush" Color="#66E11D48"/>
+    <sys:Double x:Key="GlowOpacity" xmlns:sys="clr-namespace:System;assembly=mscorlib">0.30</sys:Double>
+
+    <!-- 示波器 -->
+    <SolidColorBrush x:Key="ScopeGridBrush" Color="#120F172A"/>
+    <SolidColorBrush x:Key="ScopeBaseBrush" Color="#330F172A"/>
+    <SolidColorBrush x:Key="ScopeIdleBrush" Color="#800284C7"/>
+    <SolidColorBrush x:Key="ScopeLabelBrush" Color="#FF94A3B8"/>
+</ResourceDictionary>

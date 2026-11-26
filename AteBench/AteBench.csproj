@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>AteBench</AssemblyName>
+    <RootNamespace>AteBench</RootNamespace>
+    <!-- AnyCPU 且不偏好 32 位元: 在 64 位元 Windows 上載入 System32 的 64 位元 NiSpyLog.dll -->
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <Version>1.0.0</Version>
+    <Product>ATE Bench</Product>
+    <Description>擷取並分析 ATE 程式使用的 SCPI 指令</Description>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- 圖示由 tools\make_icon.ps1 產生 -->
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Web.Extensions" />
+    <!-- XAML 編譯器解析 System.Web.Extensions 時需要 -->
+    <Reference Include="System.Web" />
+    <Reference Include="System.IO.Compression" />
+    <EmbeddedResource Include="report_template.html" LogicalName="report_template.html" />
+    <Resource Include="app.ico" />
+  </ItemGroup>
+
+</Project>

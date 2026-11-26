@@ -1,0 +1,18 @@
+# 建置輸出
+bin/
+obj/
+dist/
+
+# 擷取紀錄 (含實際 ATE 的指令資料)
+captures/
+
+# Python
+__pycache__/
+*.pyc
+
+# tools\make_icon.ps1 產生的預覽圖
+tools/icon/
+
+# IDE
+.vs/
+*.user

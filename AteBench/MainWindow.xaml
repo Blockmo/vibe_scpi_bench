@@ -1,0 +1,360 @@
+<Window x:Class="AteBench.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:AteBench"
+        Title="ATE Bench - SCPI 指令分析" Width="1240" Height="800" MinWidth="1040" MinHeight="680"
+        Icon="/AteBench;component/app.ico" WindowStartupLocation="CenterScreen" Background="{DynamicResource BgBrush}"
+        Foreground="{DynamicResource InkBrush}" FontFamily="{StaticResource UiFont}" FontSize="13"
+        TextOptions.TextFormattingMode="Ideal" UseLayoutRounding="True">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="46" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <!-- KPI 數字方塊 -->
+        <Style x:Key="KpiTile" TargetType="Border" BasedOn="{StaticResource Panel}">
+            <Setter Property="Padding" Value="16,12,16,12"/>
+            <Setter Property="Margin" Value="0,0,12,0"/>
+        </Style>
+        <Style x:Key="KpiValue" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="30"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource InkBrush}"/>
+            <Setter Property="Margin" Value="0,2,0,0"/>
+        </Style>
+
+        <!-- 儀器卡片 -->
+        <DataTemplate x:Key="InstrumentCard" DataType="{x:Type local:InstrumentVm}">
+            <Border x:Name="Card" Style="{StaticResource Panel}" Background="{DynamicResource PanelAltBrush}" CornerRadius="12"
+                    Padding="14,12" Margin="0,0,0,10">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Ellipse x:Name="Led" Width="10" Height="10" Fill="{DynamicResource FaintBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Name}" FontFamily="{StaticResource MonoFont}" FontSize="13.5"
+                                   FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip="{Binding Name}"/>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
+                            <Border x:Name="ErrBadge" Background="{DynamicResource ErrBadgeBrush}" CornerRadius="8" Padding="7,1" Margin="0,0,6,0" Visibility="Collapsed">
+                                <TextBlock Foreground="{DynamicResource CoralBrush}" FontSize="11" FontWeight="SemiBold">
+                                    <Run Text="錯誤"/> <Run Text="{Binding Errors, Mode=OneWay}"/>
+                                </TextBlock>
+                            </Border>
+                            <Border CornerRadius="8" Padding="7,1" BorderBrush="{Binding KindBrush}" BorderThickness="1">
+                                <TextBlock Text="{Binding Kind}" Foreground="{Binding KindBrush}" FontSize="10.5" FontWeight="SemiBold"/>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock Text="{Binding IdnText}" Foreground="{DynamicResource MutedBrush}" FontSize="11.5" Margin="20,3,0,0"
+                               TextTrimming="CharacterEllipsis"/>
+
+                    <Grid Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="指令" Style="{StaticResource Caps}" FontSize="10.5"/>
+                            <TextBlock Text="{Binding Commands, StringFormat=N0}" FontSize="19" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="不重複" Style="{StaticResource Caps}" FontSize="10.5"/>
+                            <TextBlock Text="{Binding Unique, StringFormat=N0}" FontSize="19" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="寫入" Style="{StaticResource Caps}" FontSize="10.5"/>
+                            <TextBlock Text="{Binding Writes, StringFormat=N0}" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource CyanBrush}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="3">
+                            <TextBlock Text="讀取" Style="{StaticResource Caps}" FontSize="10.5"/>
+                            <TextBlock Text="{Binding Reads, StringFormat=N0}" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource VioletBrush}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- 寫入 / 讀取比例 -->
+                    <Grid Height="4" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="{Binding WriteStar}"/>
+                            <ColumnDefinition Width="{Binding ReadStar}"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Background="{DynamicResource CyanBrush}" CornerRadius="2" Margin="0,0,1,0"/>
+                        <Border Grid.Column="1" Background="{DynamicResource VioletBrush}" CornerRadius="2" Margin="1,0,0,0"/>
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{Binding Top}" Margin="0,10,0,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource ChipBrush}" CornerRadius="6" Padding="7,2" Margin="0,0,6,4">
+                                    <TextBlock Text="{Binding}" FontFamily="{StaticResource MonoFont}" FontSize="11.5" Foreground="{DynamicResource ChipTextBrush}"/>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsActive}" Value="True">
+                    <Setter TargetName="Led" Property="Fill" Value="{DynamicResource GreenBrush}"/>
+                    <Setter TargetName="Led" Property="Effect">
+                        <Setter.Value><DropShadowEffect Color="#FF34D399" BlurRadius="12" ShadowDepth="0" Opacity="0.9"/></Setter.Value>
+                    </Setter>
+                    <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource CardActiveBorderBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding HasErrors}" Value="True">
+                    <Setter TargetName="ErrBadge" Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!-- 即時指令流的一列 -->
+        <DataTemplate x:Key="StreamRow" DataType="{x:Type local:StreamItem}">
+            <Grid Margin="0,1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="92"/>
+                    <ColumnDefinition Width="22"/>
+                    <ColumnDefinition Width="210"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Time}" Foreground="{DynamicResource FaintBrush}"/>
+                <TextBlock x:Name="Arrow" Grid.Column="1" Text="▶" FontSize="9" VerticalAlignment="Center" Foreground="{DynamicResource CyanBrush}"/>
+                <TextBlock Grid.Column="2" Text="{Binding Inst}" Foreground="{DynamicResource MutedBrush}" TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
+                <TextBlock x:Name="Body" Grid.Column="3" Text="{Binding Text}" Foreground="{DynamicResource StreamTextBrush}" TextTrimming="CharacterEllipsis"/>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Dir}" Value="R">
+                    <Setter TargetName="Arrow" Property="Text" Value="◀"/>
+                    <Setter TargetName="Arrow" Property="Foreground" Value="{DynamicResource VioletBrush}"/>
+                    <Setter TargetName="Body" Property="Foreground" Value="{DynamicResource StreamReadTextBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Dir}" Value="E">
+                    <Setter TargetName="Arrow" Property="Text" Value="✕"/>
+                    <Setter TargetName="Arrow" Property="Foreground" Value="{DynamicResource CoralBrush}"/>
+                    <Setter TargetName="Body" Property="Foreground" Value="{DynamicResource CoralBrush}"/>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid x:Name="Root">
+        <!-- 背景光暈 -->
+        <Rectangle IsHitTestVisible="False" Fill="{DynamicResource BgGlow1Brush}"/>
+        <Rectangle IsHitTestVisible="False" Fill="{DynamicResource BgGlow2Brush}"/>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="46"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- ===== 標題列 ===== -->
+            <Grid>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0,0,0">
+                    <Grid Width="22" Height="22">
+                        <Border CornerRadius="6" Background="{DynamicResource AccentGradient}"/>
+                        <Path Data="M3,12 L7,12 L9,6 L12,17 L14,10 L15.5,12 L19,12" Stroke="{DynamicResource OnAccentBrush}" StrokeThickness="1.8"
+                              StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                    </Grid>
+                    <TextBlock Text="ATE BENCH" FontWeight="Bold" FontSize="13.5" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="SCPI 指令分析" Foreground="{DynamicResource MutedBrush}" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" WindowChrome.IsHitTestVisibleInChrome="True">
+                    <!-- 主題切換 -->
+                    <Border Background="{DynamicResource SegmentBgBrush}" CornerRadius="9" Padding="3" Margin="0,0,14,0" VerticalAlignment="Center"
+                            ToolTip="切換深色 / 淺色主題">
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton x:Name="DarkThemeButton" Style="{StaticResource SegmentButton}" GroupName="AppTheme" Content="Dark"
+                                         Tag="M12,3 A7,7 0 1 0 21,12 A9,9 0 1 1 12,3 Z" Checked="Theme_Checked"/>
+                            <RadioButton x:Name="LightThemeButton" Style="{StaticResource SegmentButton}" GroupName="AppTheme" Content="Light"
+                                         Tag="M12,8 A4,4 0 1 1 11.99,8 Z M12,1.5 V4 M12,20 V22.5 M4.6,4.6 L6.3,6.3 M17.7,17.7 L19.4,19.4 M1.5,12 H4 M20,12 H22.5 M4.6,19.4 L6.3,17.7 M17.7,6.3 L19.4,4.6"
+                                         Checked="Theme_Checked"/>
+                        </StackPanel>
+                    </Border>
+                    <Button Style="{StaticResource CaptionButton}" Tag="M0,5 H10" Click="Minimize_Click" ToolTip="最小化"/>
+                    <Button x:Name="MaxButton" Style="{StaticResource CaptionButton}" Tag="M0,0 H10 V10 H0 Z" Click="Maximize_Click" ToolTip="最大化"/>
+                    <Button Style="{StaticResource CloseCaptionButton}" Tag="M0,0 L10,10 M10,0 L0,10" Click="Close_Click" ToolTip="關閉"/>
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.Row="1" Margin="18,4,18,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="290"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- ===== 左側: 擷取控制 ===== -->
+                <Border Style="{StaticResource Panel}" Padding="20,18" Margin="0,0,14,0">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Bottom">
+                            <CheckBox x:Name="NormalizeSwitch" Style="{StaticResource Switch}" IsChecked="True" Content="歸併 SCPI 長短格式"
+                                      ToolTip="把 VOLTage 與 VOLT 視為同一個指令"/>
+                            <Button x:Name="OpenExistingButton" Style="{StaticResource GhostButton}" Content="分析既有紀錄檔…" Margin="0,14,0,0"
+                                    Click="OpenExisting_Click"/>
+                        </StackPanel>
+
+                        <StackPanel>
+                            <Button x:Name="CaptureButton" Style="{StaticResource CaptureButton}" Tag="idle" Click="Capture_Click"
+                                    HorizontalAlignment="Center" ToolTip="開始 / 停止擷取"/>
+                            <TextBlock x:Name="StateText" Text="待命" FontSize="17" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                            <TextBlock x:Name="ElapsedText" Text="00:00:00" FontFamily="{StaticResource MonoFont}" FontSize="30"
+                                       HorizontalAlignment="Center" Foreground="{DynamicResource MutedBrush}" Margin="0,2,0,0"/>
+                            <TextBlock x:Name="HintText" Text="按下按鈕開始擷取，再啟動 ATE 程式進行測試。" TextWrapping="Wrap" TextAlignment="Center"
+                                       Foreground="{DynamicResource MutedBrush}" FontSize="12.5" Margin="0,10,0,0" LineHeight="19"/>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- ===== 右側: 儀表板 ===== -->
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="190"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- KPI -->
+                    <UniformGrid Rows="1" Margin="0,0,-12,0">
+                        <Border Style="{StaticResource KpiTile}">
+                            <StackPanel>
+                                <TextBlock Text="儀器" Style="{StaticResource Caps}"/>
+                                <TextBlock x:Name="KpiInstruments" Text="0" Style="{StaticResource KpiValue}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource KpiTile}">
+                            <StackPanel>
+                                <TextBlock Text="SCPI 指令" Style="{StaticResource Caps}"/>
+                                <TextBlock x:Name="KpiCommands" Text="0" Style="{StaticResource KpiValue}" Foreground="{DynamicResource AccentGradient}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource KpiTile}">
+                            <StackPanel>
+                                <TextBlock Text="不重複指令" Style="{StaticResource Caps}"/>
+                                <TextBlock x:Name="KpiUnique" Text="0" Style="{StaticResource KpiValue}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource KpiTile}">
+                            <StackPanel>
+                                <TextBlock Text="寫入" Style="{StaticResource Caps}"/>
+                                <TextBlock x:Name="KpiWrites" Text="0" Style="{StaticResource KpiValue}" Foreground="{DynamicResource CyanBrush}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource KpiTile}">
+                            <StackPanel>
+                                <TextBlock Text="讀取" Style="{StaticResource Caps}"/>
+                                <TextBlock x:Name="KpiReads" Text="0" Style="{StaticResource KpiValue}" Foreground="{DynamicResource VioletBrush}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource KpiTile}">
+                            <StackPanel>
+                                <TextBlock Text="錯誤 / 逾時" Style="{StaticResource Caps}"/>
+                                <TextBlock x:Name="KpiErrors" Text="0" Style="{StaticResource KpiValue}"/>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <!-- 匯流排活動 -->
+                    <Border Grid.Row="1" Style="{StaticResource Panel}" Margin="0,14,0,0" Padding="16,12,16,10">
+                        <DockPanel>
+                            <Grid DockPanel.Dock="Top" Margin="0,0,0,6">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="匯流排活動" Style="{StaticResource PanelTitle}"/>
+                                    <Ellipse Width="8" Height="8" Fill="{DynamicResource CyanBrush}" Margin="18,1,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="指令 / 秒" Foreground="{DynamicResource MutedBrush}" FontSize="12" VerticalAlignment="Center"/>
+                                    <Ellipse Width="8" Height="8" Fill="{DynamicResource VioletBrush}" Margin="14,1,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="讀取 / 秒" Foreground="{DynamicResource MutedBrush}" FontSize="12" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock x:Name="RateText" Text="最近 60 秒" HorizontalAlignment="Right" Foreground="{DynamicResource MutedBrush}"
+                                           FontSize="12" VerticalAlignment="Center"/>
+                            </Grid>
+                            <local:ScopeChart x:Name="Scope"/>
+                        </DockPanel>
+                    </Border>
+
+                    <!-- 儀器 + 指令流 -->
+                    <Grid Grid.Row="2" Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="5*" MinWidth="330"/>
+                            <ColumnDefinition Width="6*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Style="{StaticResource Panel}" Margin="0,0,14,0" Padding="16,12,8,6">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top" Text="儀器" Style="{StaticResource PanelTitle}" Margin="0,0,0,10"/>
+                                <Grid>
+                                    <TextBlock x:Name="EmptyInstruments" Text="尚未偵測到儀器通訊" Foreground="{DynamicResource FaintBrush}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                        <ItemsControl x:Name="InstrumentList" ItemTemplate="{StaticResource InstrumentCard}" Margin="0,0,8,0"/>
+                                    </ScrollViewer>
+                                </Grid>
+                            </DockPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" Style="{StaticResource Panel}" Padding="16,12,8,10">
+                            <DockPanel>
+                                <Grid DockPanel.Dock="Top" Margin="0,0,8,8">
+                                    <TextBlock Text="即時指令流" Style="{StaticResource PanelTitle}"/>
+                                    <TextBlock Text="▶ 寫入   ◀ 讀取   ✕ 錯誤" HorizontalAlignment="Right" Foreground="{DynamicResource FaintBrush}"
+                                               FontSize="11.5" VerticalAlignment="Center"/>
+                                </Grid>
+                                <Grid>
+                                    <TextBlock x:Name="EmptyStream" Text="擷取開始後，指令會即時顯示在這裡" Foreground="{DynamicResource FaintBrush}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <ListBox x:Name="StreamList" ItemTemplate="{StaticResource StreamRow}" Background="Transparent" BorderThickness="0"
+                                             FontFamily="{StaticResource MonoFont}" FontSize="12.5" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                             VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling">
+                                        <ListBox.ItemContainerStyle>
+                                            <Style TargetType="ListBoxItem">
+                                                <Setter Property="Focusable" Value="False"/>
+                                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="ListBoxItem">
+                                                            <Border x:Name="Bd" Background="Transparent" CornerRadius="4" Padding="4,0">
+                                                                <ContentPresenter/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowHoverBrush}"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </ListBox.ItemContainerStyle>
+                                    </ListBox>
+                                </Grid>
+                            </DockPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- 結果 / 錯誤橫幅 -->
+                    <Border x:Name="Banner" Grid.Row="3" Margin="0,14,0,0" CornerRadius="12" Padding="16,10" BorderThickness="1"
+                            Background="{DynamicResource BannerOkBrush}" BorderBrush="{DynamicResource BannerOkBorderBrush}" Visibility="Collapsed">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button x:Name="BannerOpenReport" Style="{StaticResource AccentButton}" Content="開啟報告" Click="OpenReport_Click"/>
+                                <Button x:Name="BannerOpenFolder" Style="{StaticResource GhostButton}" Content="開啟資料夾" Margin="8,0,0,0" Click="OpenFolder_Click"/>
+                                <Button Style="{StaticResource GhostButton}" Content="✕" Padding="10,7" Margin="8,0,0,0" Click="BannerClose_Click" ToolTip="關閉"/>
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock x:Name="BannerTitle" FontWeight="SemiBold" FontSize="13.5"/>
+                                <TextBlock x:Name="BannerDetail" Foreground="{DynamicResource MutedBrush}" FontSize="12" TextTrimming="CharacterEllipsis" Margin="0,1,12,0"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

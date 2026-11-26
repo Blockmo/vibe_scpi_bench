@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATE SCPI 指令分析報告</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2322D3EE'/><stop offset='1' stop-color='%236366F1'/></linearGradient></defs><rect x='10' y='10' width='236' height='236' rx='56' fill='url(%23g)'/><path d='M34 136H80L104 70L136 194L160 104L176 136H222' fill='none' stroke='%2306121E' stroke-width='20' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--card:#fff;--ink:#1c2330;--mut:#667085;--line:#e3e6ec;--acc:#2563eb;--acc-soft:#dbe7ff;
+--ok:#15803d;--bad:#c2410c;--bad-soft:#ffe9df;--q:#7c3aed;--q-soft:#ede9fe;--set-soft:#e0f2fe;--set:#0369a1;--row:#f8fafc;--seg:#e5e8ee}
+:root[data-theme=dark]{color-scheme:dark;--bg:#12151b;--card:#1b2029;--ink:#e6e9ef;--mut:#98a2b3;--line:#2c3340;
+--acc:#6ea0ff;--acc-soft:#22355c;--ok:#4ade80;--bad:#fb923c;--bad-soft:#4a2415;--q:#b79cff;--q-soft:#33285a;--set-soft:#16364a;--set:#7dd3fc;--row:#202632;--seg:#10141b}
+@media (prefers-color-scheme:dark){:root:not([data-theme]){color-scheme:dark;--bg:#12151b;--card:#1b2029;--ink:#e6e9ef;--mut:#98a2b3;--line:#2c3340;
+--acc:#6ea0ff;--acc-soft:#22355c;--ok:#4ade80;--bad:#fb923c;--bad-soft:#4a2415;--q:#b79cff;--q-soft:#33285a;--set-soft:#16364a;--set:#7dd3fc;--row:#202632;--seg:#10141b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 "Segoe UI","Microsoft JhengHei",system-ui,sans-serif}
+main{max-width:1500px;margin:0 auto;padding:24px 20px 60px}
+h1{font-size:22px;margin:0 0 4px}
+.top{display:flex;align-items:flex-start;gap:16px}
+.top .grow{flex:1;min-width:0}
+.seg{display:inline-flex;flex-shrink:0;background:var(--seg);border-radius:9px;padding:3px;margin-top:2px}
+.seg button{border:0;background:transparent;color:var(--mut);padding:4px 12px;border-radius:7px;display:inline-flex;gap:6px;align-items:center;font-weight:600;font-size:12.5px}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed=true]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.seg svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+@media print{.seg{display:none}}
+h2{font-size:16px;margin:0 0 12px}
+.sub{color:var(--mut);font-size:13px;margin-bottom:18px;word-break:break-all}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi b{display:block;font-size:24px;font-variant-numeric:tabular-nums;line-height:1.2}
+.kpi span{color:var(--mut);font-size:12px}
+.kpi.bad b{color:var(--bad)}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:18px}
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
+.tools input[type=search],.tools select{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
+.tools input[type=search]{min-width:240px}
+.tools label{color:var(--mut);font-size:13px;display:flex;gap:4px;align-items:center}
+.tools .count{margin-left:auto;color:var(--mut);font-size:12px}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:var(--card);color:var(--mut);font-weight:600;white-space:nowrap;cursor:pointer;user-select:none}
+th.sorted{color:var(--acc)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tbody tr:hover{background:var(--row)}
+tr.click{cursor:pointer}
+tr.sel{background:var(--acc-soft)}
+code,.mono{font-family:Consolas,"Cascadia Mono",monospace;font-size:12.5px}
+.cmd{font-weight:600}
+.tag{display:inline-block;padding:0 7px;border-radius:9px;font-size:11.5px;white-space:nowrap}
+.tag.q{background:var(--q-soft);color:var(--q)}
+.tag.s{background:var(--set-soft);color:var(--set)}
+.tag.e{background:var(--bad-soft);color:var(--bad)}
+.tag.w{background:var(--set-soft);color:var(--set)}
+.tag.r{background:var(--q-soft);color:var(--q)}
+.barcell{position:relative;min-width:90px}
+.barcell i{position:absolute;left:0;top:4px;bottom:4px;background:var(--acc-soft);border-radius:3px}
+.barcell span{position:relative}
+.mut{color:var(--mut)}
+.arg{display:inline-block;margin:0 6px 2px 0;padding:0 5px;border:1px solid var(--line);border-radius:4px}
+.arg small{color:var(--mut)}
+.pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px;color:var(--mut);font-size:12px}
+button{font:inherit;padding:3px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);cursor:pointer}
+button:disabled{opacity:.4;cursor:default}
+.note{color:var(--mut);font-size:12.5px;margin:8px 0 0}
+.err{color:var(--bad)}
+details summary{cursor:pointer;color:var(--acc)}
+</style>
+<script>
+(function () {
+  var t = /*THEME*/"";
+  try { var s = localStorage.getItem("atebench-report-theme"); if (s === "dark" || s === "light") t = s; } catch (e) {}
+  if (t !== "dark" && t !== "light") t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", t);
+})();
+</script>
+</head>
+<body>
+<main>
+<div class="top">
+<div class="grow">
+<h1>ATE SCPI 指令分析報告</h1>
+<div class="sub" id="sub"></div>
+</div>
+<div class="seg" role="group" aria-label="主題">
+<button type="button" data-theme-btn="dark" title="深色主題"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>Dark</button>
+<button type="button" data-theme-btn="light" title="淺色主題"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Light</button>
+</div>
+</div>
+<div class="kpis" id="kpis"></div>
+
+<section><h2>儀器總覽</h2>
+<div class="wrap"><table id="tInst"></table></div>
+<p class="note">點選一列可讓下方所有表格只顯示該儀器；再點一次取消。</p></section>
+
+<section id="secSeg" hidden><h2>測項 (標記) 統計</h2>
+<div class="wrap"><table id="tSeg"></table></div></section>
+
+<section><h2>指令統計</h2>
+<div class="tools">
+<input type="search" id="cmdQ" placeholder="搜尋指令 / 參數…">
+<select id="cmdType"><option value="">全部類型</option><option value="s">設定</option><option value="q">查詢</option></select>
+<label><input type="checkbox" id="cmdMerge">合併所有儀器</label>
+<span class="count" id="cmdCount"></span></div>
+<div class="wrap"><table id="tCmd"></table></div>
+<p class="note" id="normNote"></p></section>
+
+<section id="secErr" hidden><h2>錯誤 / 逾時</h2>
+<div class="wrap"><table id="tErr"></table></div><div class="pager" id="pErr"></div></section>
+
+<section><h2>其他 API 呼叫 (非讀寫)</h2>
+<div class="wrap"><table id="tOther"></table></div></section>
+
+<section><h2>時間軸</h2>
+<div class="tools">
+<input type="search" id="tlQ" placeholder="搜尋內容 / 函式…">
+<select id="tlSeg" hidden></select>
+<label><input type="checkbox" id="tlIO" checked>只顯示讀寫</label>
+<span class="count" id="tlCount"></span></div>
+<div class="wrap"><table id="tTl"></table></div><div class="pager" id="pTl"></div>
+<p class="note" id="tlNote"></p></section>
+</main>
+<script>
+const D = /*DATA*/;
+
+/* 主題切換 */
+(function () {
+  const btns = document.querySelectorAll("[data-theme-btn]");
+  const sync = () => btns.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.themeBtn === document.documentElement.getAttribute("data-theme"))));
+  btns.forEach(b => b.addEventListener("click", () => {
+    document.documentElement.setAttribute("data-theme", b.dataset.themeBtn);
+    try { localStorage.setItem("atebench-report-theme", b.dataset.themeBtn); } catch (e) {}
+    sync();
+  }));
+  sync();
+})();
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const num = n => Number(n).toLocaleString("en-US");
+const ms = n => n >= 1000 ? (n / 1000).toFixed(2) + " s" : (+n).toFixed(n < 10 ? 2 : 1) + " ms";
+const instName = i => D.instruments[i] ? D.instruments[i].name : "";
+let selInst = null;
+
+/* 通用表格: 可排序、可分頁 */
+function makeTable(el, cols, opts) {
+  opts = opts || {};
+  const st = {rows: [], sort: opts.sort || null, dir: opts.dir || -1, page: 0};
+  function render() {
+    let rows = st.rows.slice();
+    if (st.sort != null) {
+      const c = cols[st.sort], v = c.val || (r => r[c.k]);
+      rows.sort((a, b) => { const x = v(a), y = v(b); return (x > y ? 1 : x < y ? -1 : 0) * st.dir; });
+    }
+    const size = opts.page || rows.length, pages = Math.max(1, Math.ceil(rows.length / (size || 1)));
+    st.page = Math.min(st.page, pages - 1);
+    const view = opts.page ? rows.slice(st.page * size, st.page * size + size) : rows;
+    let h = "<thead><tr>" + cols.map((c, i) => `<th data-i="${i}" class="${c.n ? "n" : ""}${st.sort === i ? " sorted" : ""}">${c.label}${st.sort === i ? (st.dir > 0 ? " ▲" : " ▼") : ""}</th>`).join("") + "</tr></thead><tbody>";
+    if (!view.length) h += `<tr><td colspan="${cols.length}" class="mut">(無資料)</td></tr>`;
+    for (const r of view) h += `<tr class="${opts.rowClass ? opts.rowClass(r) : ""}" data-id="${opts.rowId ? opts.rowId(r) : ""}">` + cols.map(c => `<td class="${c.n ? "n" : ""} ${c.cls || ""}">${c.fmt ? c.fmt(r) : esc(r[c.k])}</td>`).join("") + "</tr>";
+    el.innerHTML = h + "</tbody>";
+    if (opts.pager) {
+      const p = $(opts.pager);
+      p.innerHTML = pages > 1 ? `<button ${st.page ? "" : "disabled"} data-d="-1">上一頁</button> 第 ${st.page + 1} / ${pages} 頁 <button ${st.page < pages - 1 ? "" : "disabled"} data-d="1">下一頁</button>` : "";
+      p.onclick = e => { const d = e.target.dataset.d; if (d) { st.page += +d; render(); } };
+    }
+  }
+  el.onclick = e => {
+    const th = e.target.closest("th");
+    if (th) { const i = +th.dataset.i; if (st.sort === i) st.dir = -st.dir; else { st.sort = i; st.dir = cols[i].n ? -1 : 1; } render(); return; }
+    const tr = e.target.closest("tbody tr");
+    if (tr && opts.onRow) opts.onRow(tr.dataset.id);
+  };
+  return {set(rows) { st.rows = rows; st.page = 0; render(); }, render};
+}
+const bar = (v, max) => `<div class="barcell"><i style="width:${max ? Math.max(1, v / max * 100) : 0}%"></i><span>${num(v)}</span></div>`;
+
+/* 標題與 KPI */
+const T = D.totals, M = D.meta;
+$("sub").innerHTML = `擷取起始 ${esc(M.captured || M.start_text || "-")}　|　歷時 ${M.duration_s} s　|　來源 ${esc(M.source)}` +
+  (M.processes.length ? `<br>呼叫程序：` + M.processes.map(p => `${esc(p.name || "PID")} (${p.pid})：${num(p.calls)} 次 API 呼叫`).join("、") : "");
+$("kpis").innerHTML = [
+  [T.instruments, "使用的儀器數"], [T.commands, "SCPI 指令總數"], [T.unique, "不重複指令 (依儀器)"],
+  [T.writes, "寫入次數 (Write)"], [T.reads, "讀取次數 (Read)"], [ms(T.io_ms), "匯流排 I/O 總時間"],
+  [num(T.bytes_out) + " / " + num(T.bytes_in), "送出 / 接收 bytes"], [T.errors, "錯誤 / 逾時", T.errors ? "bad" : ""]
+].map(k => `<div class="kpi ${k[2] || ""}"><b>${typeof k[0] === "number" ? num(k[0]) : k[0]}</b><span>${k[1]}</span></div>`).join("");
+
+/* 儀器總覽 */
+const insts = D.instruments.filter(i => i.writes || i.reads || i.errors || i.other_calls);
+const maxCmd = Math.max(1, ...insts.map(i => i.commands));
+const tInst = makeTable($("tInst"), [
+  {k: "name", label: "儀器 (資源)", fmt: r => `<code>${esc(r.name)}</code>`},
+  {k: "idn", label: "*IDN? 回應", fmt: r => r.idn ? `<span class="mono">${esc(r.idn)}</span>` : `<span class="mut">-</span>`},
+  {k: "api", label: "介面"},
+  {k: "commands", label: "指令數", n: 1, fmt: r => bar(r.commands, maxCmd)},
+  {k: "unique", label: "不重複指令", n: 1}, {k: "writes", label: "寫入", n: 1}, {k: "reads", label: "讀取", n: 1},
+  {k: "bytes_out", label: "送出 bytes", n: 1, fmt: r => num(r.bytes_out)}, {k: "bytes_in", label: "接收 bytes", n: 1, fmt: r => num(r.bytes_in)},
+  {k: "io_ms", label: "I/O 時間", n: 1, fmt: r => ms(r.io_ms)}, {k: "other_calls", label: "其他 API", n: 1},
+  {k: "errors", label: "錯誤", n: 1, fmt: r => r.errors ? `<span class="err">${r.errors}</span>` : "0"}
+], {sort: 3, rowId: r => r.id, rowClass: r => "click" + (selInst === r.id ? " sel" : ""),
+    onRow: id => { selInst = selInst === +id ? null : +id; refresh(); }});
+
+/* 指令統計 */
+const argHtml = r => (r.args.length ? r.args.map(a => `<span class="arg mono">${esc(a[0])} <small>×${a[1]}</small></span>`).join("") : "") +
+  (r.nargs > r.args.length ? `<span class="mut">…共 ${r.nargs} 種</span>` : "");
+let cmdMax = 1;
+const tCmd = makeTable($("tCmd"), [
+  {k: "inst", label: "儀器", val: r => r.instLabel, fmt: r => `<code>${esc(r.instLabel)}</code>`},
+  {k: "key", label: "指令", fmt: r => `<code class="cmd">${esc(r.key)}</code>` + (r.raw.length && r.raw[0].toUpperCase() !== r.key ? `<br><span class="mut mono">${esc(r.raw.join(" , "))}</span>` : "")},
+  {k: "query", label: "類型", val: r => r.query ? 1 : 0, fmt: r => r.kind === "binary" ? `<span class="tag e">二進位</span>` : r.query ? `<span class="tag q">查詢</span>` : `<span class="tag s">設定</span>`},
+  {k: "count", label: "次數", n: 1, fmt: r => bar(r.count, cmdMax)},
+  {k: "nargs", label: "參數", val: r => r.nargs, fmt: argHtml},
+  {k: "resp", label: "回應範例", val: r => r.resp.join(), fmt: r => r.resp.map(x => `<span class="mono">${esc(x)}</span>`).join("<br>")},
+  {k: "total_ms", label: "總 I/O 時間", n: 1, fmt: r => ms(r.total_ms)},
+  {k: "avg_ms", label: "平均", n: 1, fmt: r => ms(r.avg_ms)},
+  {k: "max_ms", label: "最大", n: 1, fmt: r => ms(r.max_ms)},
+  {k: "errors", label: "錯誤", n: 1, fmt: r => r.errors ? `<span class="err">${r.errors}</span>` : "0"}
+], {sort: 3});
+function cmdRows() {
+  const q = $("cmdQ").value.trim().toLowerCase(), ty = $("cmdType").value, merge = $("cmdMerge").checked;
+  let rows = D.commands.filter(r => (selInst == null || r.inst === selInst) && (!ty || (ty === "q") === r.query));
+  if (merge) {
+    const m = new Map();
+    for (const r of rows) {
+      let g = m.get(r.key);
+      if (!g) { g = {...r, args: [], resp: [], raw: [], insts: new Set(), count: 0, total_ms: 0, max_ms: 0, errors: 0, nargs: 0, _a: new Map()}; m.set(r.key, g); }
+      g.count += r.count; g.total_ms += r.total_ms; g.max_ms = Math.max(g.max_ms, r.max_ms); g.errors += r.errors; g.insts.add(r.inst);
+      for (const a of r.args) g._a.set(a[0], (g._a.get(a[0]) || 0) + a[1]);
+      g.nargs = Math.max(g.nargs, r.nargs);
+      for (const x of r.resp) if (g.resp.length < 3 && !g.resp.includes(x)) g.resp.push(x);
+      for (const x of r.raw) if (g.raw.length < 4 && !g.raw.includes(x)) g.raw.push(x);
+    }
+    rows = [...m.values()].map(g => { g.args = [...g._a.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6); g.nargs = Math.max(g.nargs, g.args.length);
+      g.avg_ms = g.count ? g.total_ms / g.count : 0; g.instLabel = g.insts.size > 1 ? g.insts.size + " 台儀器" : instName([...g.insts][0]); return g; });
+  } else rows = rows.map(r => ({...r, instLabel: instName(r.inst)}));
+  if (q) rows = rows.filter(r => (r.key + " " + r.raw.join(" ") + " " + r.instLabel + " " + r.args.map(a => a[0]).join(" ")).toLowerCase().includes(q));
+  cmdMax = Math.max(1, ...rows.map(r => r.count));
+  $("cmdCount").textContent = `${num(rows.length)} 種指令，共 ${num(rows.reduce((s, r) => s + r.count, 0))} 次`;
+  return rows;
+}
+$("normNote").textContent = (M.normalize ? "指令以 SCPI 短格式歸併 (例如 VOLTage 與 VOLT 視為同一指令)，並已展開以分號串接的相對路徑；灰字為實際送出的寫法。" : "指令未做長短格式歸併。") +
+  " 時間為 API 呼叫內的耗時 (查詢含讀取回應)，不含 I/O Trace 造成的呼叫間延遲。" +
+  (M.truncated_buffers ? ` 注意：有 ${M.truncated_buffers} 筆資料緩衝區被 I/O Trace 截斷。` : "");
+
+/* 測項 */
+if (D.segments.length) {
+  $("secSeg").hidden = false;
+  makeTable($("tSeg"), [
+    {k: "label", label: "測項", fmt: r => `<b>${esc(r.label)}</b>`},
+    {k: "start", label: "起始 (s)", n: 1, fmt: r => r.start == null ? "-" : r.start.toFixed(2)},
+    {k: "dur", label: "歷時 (s)", n: 1, val: r => (r.end || 0) - (r.start || 0), fmt: r => r.start == null ? "-" : (r.end - r.start).toFixed(2)},
+    {k: "instruments", label: "儀器數", n: 1}, {k: "commands", label: "指令數", n: 1}, {k: "unique", label: "不重複", n: 1},
+    {k: "writes", label: "寫入", n: 1}, {k: "reads", label: "讀取", n: 1},
+    {k: "errors", label: "錯誤", n: 1, fmt: r => r.errors ? `<span class="err">${r.errors}</span>` : "0"},
+    {k: "cmds", label: "指令明細", val: r => r.cmds.length, fmt: r => r.cmds.length ? `<details><summary>${r.cmds.length} 種</summary>` +
+      r.cmds.map(c => `<div class="mono"><span class="mut">${esc(instName(c[0]))}</span> ${esc(c[1])} <small class="mut">×${c[2]}</small></div>`).join("") + "</details>" : "-"}
+  ], {}).set(D.segments);
+  const s = $("tlSeg"); s.hidden = false;
+  s.innerHTML = `<option value="">全部測項</option>` + D.segments.map(g => `<option value="${g.idx}">${esc(g.label)}</option>`).join("");
+}
+
+/* 錯誤 */
+const tErr = makeTable($("tErr"), [
+  {k: "seq", label: "#", n: 1}, {k: "t", label: "時間 (s)", n: 1, fmt: r => r.t.toFixed(3)},
+  {k: "inst", label: "儀器", val: r => instName(r.inst), fmt: r => `<code>${esc(instName(r.inst))}</code>`},
+  {k: "func", label: "函式", fmt: r => `<code>${esc(r.func)}</code>`},
+  {k: "text", label: "內容", fmt: r => `<span class="mono">${esc(r.text)}</span>`},
+  {k: "status", label: "狀態", fmt: r => `<span class="tag e">${esc(r.status)}${r.iberr ? " / " + esc(r.iberr) : ""}</span>`},
+  {k: "desc", label: "說明"}
+], {page: 100, pager: "pErr", sort: 0, dir: 1});
+if (D.errors.length) $("secErr").hidden = false;
+
+/* 其他 API */
+const tOther = makeTable($("tOther"), [
+  {k: "inst", label: "儀器", val: r => instName(r.inst), fmt: r => `<code>${esc(instName(r.inst))}</code>`},
+  {k: "func", label: "函式", fmt: r => `<code>${esc(r.func)}</code>`},
+  {k: "count", label: "次數", n: 1}, {k: "total_ms", label: "總時間", n: 1, fmt: r => ms(r.total_ms)},
+  {k: "errors", label: "錯誤", n: 1, fmt: r => r.errors ? `<span class="err">${r.errors}</span>` : "0"}
+], {sort: 2});
+
+/* 時間軸 */
+const tTl = makeTable($("tTl"), [
+  {k: 0, label: "#", n: 1}, {k: 1, label: "時間 (s)", n: 1, fmt: r => r[1].toFixed(4)}, {k: 2, label: "時刻", cls: "mono"},
+  {k: 4, label: "儀器", val: r => instName(r[4]), fmt: r => `<code>${esc(instName(r[4]))}</code>`},
+  {k: 5, label: "函式", fmt: r => `<code>${esc(r[5])}</code>`},
+  {k: 6, label: "方向", fmt: r => r[6] === "W" ? `<span class="tag w">寫入</span>` : r[6] === "R" ? `<span class="tag r">讀取</span>` : ""},
+  {k: 7, label: "內容", fmt: r => `<span class="mono">${esc(r[7])}</span>`},
+  {k: 8, label: "bytes", n: 1, fmt: r => r[8] || ""}, {k: 9, label: "耗時", n: 1, fmt: r => ms(r[9])},
+  {k: 11, label: "狀態", fmt: r => r[10] ? `<span class="mut">${esc(r[11])}</span>` : `<span class="tag e">${esc(r[11] || "ERR")}</span>`}
+], {page: 200, pager: "pTl", sort: 0, dir: 1});
+function tlRows() {
+  const q = $("tlQ").value.trim().toLowerCase(), io = $("tlIO").checked, sg = $("tlSeg").value;
+  const rows = D.timeline.filter(r => (selInst == null || r[4] === selInst) && (!io || r[6]) && (sg === "" || r[12] === +sg) &&
+    (!q || (r[7] + " " + r[5]).toLowerCase().includes(q)));
+  $("tlCount").textContent = `${num(rows.length)} 筆`;
+  return rows;
+}
+if (D.timeline_total > D.timeline.length) $("tlNote").textContent = `時間軸僅內嵌前 ${num(D.timeline.length)} 筆 (共 ${num(D.timeline_total)} 筆)，完整內容請見同資料夾的 timeline.csv。`;
+
+function refresh() {
+  tInst.set(insts);
+  tCmd.set(cmdRows());
+  tErr.set(D.errors.filter(r => selInst == null || r.inst === selInst));
+  tOther.set(D.others.filter(r => selInst == null || r.inst === selInst));
+  tTl.set(tlRows());
+}
+for (const id of ["cmdQ", "cmdType", "cmdMerge"]) $(id).addEventListener("input", () => tCmd.set(cmdRows()));
+for (const id of ["tlQ", "tlIO", "tlSeg"]) $(id).addEventListener("input", () => tTl.set(tlRows()));
+refresh();
+</script>
+</body>
+</html>
